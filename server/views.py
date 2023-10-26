@@ -36,8 +36,8 @@ def statistics(video_id):
             for row in result:
                 result_dict = {
                     "1_paragraph_summary": row[0],
-                    "possible_idea": row[1],
-                    "possible_tags": row[2]
+                    "similar_video_idea_summary": row[1],
+                    "tags": row[2]
                 }
                 
 
