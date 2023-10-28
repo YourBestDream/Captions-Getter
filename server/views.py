@@ -7,6 +7,7 @@ from sqlalchemy import create_engine, Table, Column, String, DateTime, MetaData,
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from uuid import uuid4
 from . import db
+from dotenv import load_dotenv
 from server import app
 from flask import jsonify
 from langchain.document_loaders.generic import GenericLoader
@@ -14,6 +15,8 @@ from langchain.document_loaders.parsers.audio import OpenAIWhisperParser, OpenAI
 from langchain.document_loaders.blob_loaders.youtube_audio import YoutubeAudioLoader
 from langchain.llms.openai import OpenAI
 from langchain.prompts import PromptTemplate
+
+load_dotenv()
 
 @app.route(f'/results/<video_id>', methods=['GET','POST'])
 def statistics(video_id):
@@ -55,14 +58,14 @@ def statistics(video_id):
             # Directory where the audio will be saved
             save_dir = os.path.join(package_dir, sub_dir)
 
-            loader = GenericLoader(YoutubeAudioLoader(urls, save_dir), OpenAIWhisperParser(api_key="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"))
+            loader = GenericLoader(YoutubeAudioLoader(urls, save_dir), OpenAIWhisperParser(api_key=os.environ.get("OPENAI_API_KEY").strip()))
 
             docs = loader.load()
 
             # print(docs)
             # print(docs[0].page_content)
 
-            llm = OpenAI(model_name="gpt-3.5-turbo-16k", openai_api_key="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")
+            llm = OpenAI(model_name="gpt-3.5-turbo-16k", openai_api_key=os.environ.get("OPENAI_API_KEY"))
 
             template = """
             Summarize the following video transcript in one paragraph. Output your summary in json format, with 3 elements: "1_paragraph_summary", "similar_video_idea_summary" (here you should write 5-7 sentences on how a person can record a similar video) and a short (5-7 items) array of video tags/subjects relevant to the vieo idea, named "tags".
