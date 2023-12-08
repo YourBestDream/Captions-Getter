@@ -10,7 +10,6 @@ from uuid import uuid4
 from . import db
 from dotenv import load_dotenv
 from server import app
-from dotenv import load_dotenv
 from flask import jsonify
 from langchain.document_loaders.generic import GenericLoader
 from langchain.document_loaders.parsers.audio import OpenAIWhisperParser, OpenAIWhisperParserLocal
@@ -21,15 +20,32 @@ from langchain.prompts import PromptTemplate
 load_dotenv()
 
 
-@app.route("/retrieve", methods=['GET','POST'])
-def retrieve():
+@app.route("/retrieve/<user_id>", methods=['GET', 'POST'])
+def retrieve(user_id):
     try:
-        result = db.session.execute(text('SELECT * FROM videos;'))
-        result = list(result)
-        print(result)
+        query = text('''
+            SELECT v.video_id, v.video_name 
+            FROM user_videos uv
+            JOIN videos v ON uv.video_id = v.video_id
+            WHERE uv.user_id = :user_id;
+        ''')
+
+        result = db.session.execute(query, {"user_id": user_id})
+
+        videos_info = []
+        for row in result:
+            video_data = {
+                "video_id": row.video_id,
+                "video_name": row.video_name
+            }
+            videos_info.append(video_data)
+
+        db.session.close()
+        return jsonify(videos_info)
+
     except Exception as e:
         return str(e)
-    return jsonify(result)
+
 
 @app.route(f'/results/<video_id>', methods=['GET','POST'])
 def statistics(video_id):
@@ -76,6 +92,12 @@ def statistics(video_id):
 
 
             docs = loader.load()
+            audio_files = os.listdir(save_dir)
+            video_name_fr = None
+            for file in audio_files:
+                # If you need to match the file with a specific video_id, you might need additional logic here
+                video_name_fr = os.path.basename(file).split('.')[0]
+                break
 
             # print(docs)
             # print(docs[0].page_content)
@@ -132,13 +154,14 @@ def statistics(video_id):
                     "tags": None,
                     "possible_tags": json.dumps(tags),  # Convert the list to a JSON formatted string
                     "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow()
+                    "updated_at": datetime.utcnow(),
+                    "video_name":video_name_fr
                 }
 
                 # Insert data into the PostgreSQL table
                 sql = text("""
-                    INSERT INTO videos (id, video_id, summary, possible_idea, tags, possible_tags, created_at, updated_at)
-                    VALUES (:id, :video_id, :summary, :possible_idea, :tags, :possible_tags, :created_at, :updated_at)
+                    INSERT INTO videos (id, video_id, summary, possible_idea, tags, possible_tags, created_at, updated_at, video_name)
+                    VALUES (:id, :video_id, :summary, :possible_idea, :tags, :possible_tags, :created_at, :updated_at, :video_name)
                 """)
 
                 db.session.execute(sql, data_to_insert)
