@@ -19,6 +19,16 @@ from langchain.prompts import PromptTemplate
 
 load_dotenv()
 
+@app.route("/retrieve", methods=['GET','POST'])
+def retrieve():
+    try:
+        result = db.session.execute(text('SELECT * FROM videos;'))
+        result = list(result)
+        print(result)
+    except Exception as e:
+        return str(e)
+    return jsonify(result)
+
 @app.route(f'/results/<video_id>', methods=['GET','POST'])
 def statistics(video_id):
     try:
@@ -70,11 +80,6 @@ def statistics(video_id):
 
             transcript = docs[0].page_content
 
-            template = f"""
-            Summarize the following video transcript in one paragraph. Output your summary in json format, with 3 elements: "1_paragraph_summary", "similar_video_idea_summary" (here you should write 5-7 sentences on how a person can record a similar video) and a short (5-7 items) array of video tags/subjects relevant to the vieo idea, named "tags".
-            VIDEO: {transcript}
-            SUMMARY IN JSON FORMAT:
-            """
             response = g4f.ChatCompletion.create(
             model=g4f.models.gpt_35_turbo_16k,
             messages=[{"role": "user", "content": f'''
