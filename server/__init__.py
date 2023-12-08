@@ -16,6 +16,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = (
     f'{os.environ.get("POSTGRES_DATABASE").strip()}'  # database_name
 )
 
+# # Hardcoding the database URI for now
+# app.config['SQLALCHEMY_DATABASE_URI'] = (
+#     f'postgresql://postgres:'  # username
+#     f'{"postgres"}@'  # password
+#     f'{"localhost:5432"}/'  # host:port
+#     f'{"postgres"}'  # database_name
+# )
 # print(app.config['SQLALCHEMY_DATABASE_URI'])
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
