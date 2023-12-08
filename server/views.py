@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, Table, Column, String, DateTime, MetaData,
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from uuid import uuid4
 from . import db
+from dotenv import load_dotenv
 from server import app
 from dotenv import load_dotenv
 from flask import jsonify
@@ -18,6 +19,7 @@ from langchain.llms.openai import OpenAI
 from langchain.prompts import PromptTemplate
 
 load_dotenv()
+
 
 @app.route("/retrieve", methods=['GET','POST'])
 def retrieve():
@@ -69,7 +71,9 @@ def statistics(video_id):
             # Directory where the audio will be saved
             save_dir = os.path.join(package_dir, sub_dir)
 
+
             loader = GenericLoader(YoutubeAudioLoader(urls, save_dir), OpenAIWhisperParser(api_key=os.getenv("API_KEY")))
+
 
             docs = loader.load()
 
